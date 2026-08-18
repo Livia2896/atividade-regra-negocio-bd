@@ -15,7 +15,18 @@
 
 ### 1.3 Regras na aplicação
 
-### 1.4 Comparativo BD x Aplicação
+As regras de negócio na aplicação são implementadas no próprio sistema responsável por receber e processar as ações do usuário. Elas normalmente ficam em partes específicas do código, como camadas de serviço, responsáveis por verificar se uma operação pode ou não ser realizada antes de enviar as informações ao banco de dados. Também podem ser utilizadas validações de entrada e recursos oferecidos por frameworks de desenvolvimento. Em um Sistema de Vendas, por exemplo, a aplicação pode verificar se a quantidade solicitada pelo vendedor é menor ou igual à quantidade disponível em estoque. Assim, quando um vendedor tenta realizar uma venda, o sistema consulta o estoque, verifica a regra e somente então permite que a operação continue.
+
+*Vantagens*
+
+Uma das principais vantagens dessa abordagem é a flexibilidade. As regras podem ser alteradas diretamente no código da aplicação, permitindo implementar comportamentos mais complexos e específicos para cada situação. Por exemplo, o sistema pode verificar diferentes condições antes de permitir uma venda, como quantidade disponível, descontos permitidos e perfil do vendedor. Outra vantagem é a facilidade de integração com a interface do sistema. A aplicação pode apresentar imediatamente uma mensagem ao usuário, como “Estoque insuficiente para concluir a venda”, tornando o sistema mais fácil de utilizar.
+
+*Desvantagens*
+
+Por outro lado, existem desvantagens. Uma delas é que a regra pode não ser protegida caso existam várias aplicações acessando o mesmo banco de dados. Se dois vendedores tentarem vender simultaneamente a última unidade de um produto, duas aplicações podem consultar o estoque antes que qualquer uma delas atualize a quantidade. Nesse cenário, apenas a validação na aplicação pode não ser suficiente para garantir a regra de que não seja vendida uma quantidade maior do que a disponível. Outra desvantagem é a possibilidade de duplicação das regras. Se diferentes sistemas ou aplicações acessarem o mesmo banco, cada um pode precisar implementar a mesma validação. Caso uma aplicação seja atualizada e outra não, podem surgir comportamentos diferentes e problemas de consistência.
+
+Portanto, as regras na aplicação são úteis principalmente quando envolvem validações relacionadas ao funcionamento do sistema e à interação com o usuário, oferecendo flexibilidade e facilidade de manutenção. Entretanto, em situações que exigem garantia de consistência dos dados, especialmente em operações simultâneas, somente a aplicação pode não ser suficiente.
+
 ### 1.4 Comparativo BD x Aplicação
 
 | Critério                  | Banco de Dados                                                                                                                | Aplicação                                                                                                            |
