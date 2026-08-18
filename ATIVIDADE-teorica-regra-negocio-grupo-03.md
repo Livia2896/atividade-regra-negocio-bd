@@ -16,7 +16,16 @@
 ### 1.3 Regras na aplicação
 
 ### 1.4 Comparativo BD x Aplicação
+### 1.4 Comparativo BD x Aplicação
 
+| Critério                  | Banco de Dados                                                                                                                | Aplicação                                                                                                            |
+| ------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Consistência              | Permite aplicar as regras de integridade diretamente aos dados, mesmo quando existem diferentes aplicações acessando o banco. | Depende de cada aplicação implementar e seguir corretamente as mesmas regras.                                        |
+| Segurança                 | Permite controlar permissões de acesso e restringir operações de acordo com as permissões definidas.                          | Permite controlar acessos, permissões e validar as operações antes de enviá-las ao banco.                            |
+| Performance               | Pode ser mais eficiente quando a regra envolve diretamente os dados e pode ser verificada no próprio banco.                   | Pode reduzir consultas desnecessárias quando algumas validações podem ser feitas antes de acessar o banco.           |
+| Manutenção                | Facilita a manutenção de regras que precisam ser usadas por várias aplicações, pois ficam centralizadas no banco.             | Pode facilitar a organização e os testes da lógica, mas mudanças podem precisar ser feitas em diferentes aplicações. |
+| Portabilidade             | Pode exigir adaptações quando utiliza recursos específicos do SGBD.                                                           | Pode facilitar a mudança de banco quando a lógica não depende diretamente de recursos específicos dele.              |
+| Controle central da regra | Permite manter uma regra em um único lugar e aplicá-la às diferentes aplicações que acessam o banco.                          | O controle fica distribuído entre as aplicações, o que pode gerar diferenças na implementação da mesma regra.        |
 ### 1.5 Análise crítica: qual a melhor opção?
 
 # 2.Exemplos e Casos
