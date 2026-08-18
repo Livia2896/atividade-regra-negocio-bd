@@ -1,8 +1,8 @@
 # Atividade Teórica: Regra de Negócio no BD versus na Aplicação
 
-**Aluno(s):** Andreia Letícia Lemos, Lívia Moreira, Maiany Melo, Sarha Sthefanny, Tais Sousa, Yasmin de Lima
+**Aluno(s):** Andreia Letícia Lemos, Layla Tais Sousa, Lívia Moreira, Maiany Melo, Sarha Sthefanny, Yasmin de Lima
 **Turma:** Banco de Dados 2026
-**Data:** 16/08/2026
+**Data:** 19/08/2026
 **Repositório Git:** https://github.com/Livia2896/atividade-regra-negocio-bd
 
 ## Resumo Executivo
