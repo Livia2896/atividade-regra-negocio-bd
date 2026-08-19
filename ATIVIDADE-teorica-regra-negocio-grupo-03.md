@@ -6,11 +6,65 @@
 **Repositório Git:** https://github.com/Livia2896/atividade-regra-negocio-bd
 
 ## Resumo Executivo
+A decisão sobre onde uma regra de negócio deve residir — se na estrutura do banco de dados ou na lógica da aplicação — figura entre as questões mais recorrentes, e ao mesmo tempo mais subestimadas, no desenvolvimento de sistemas de informação. Trata-se de uma escolha que, embora frequentemente tratada como um detalhe de implementação, determina de forma direta a confiabilidade, a integridade e a longevidade de qualquer sistema que dependa da consistência de seus dados ao longo do tempo.
+
+Com o propósito de examinar essa questão para além do plano teórico, o grupo desenvolveu um estudo de caso aplicado a um sistema de vendas de uma loja de acessórios de tecnologia, no qual foi analisada a regra de negócio "não é permitido vender uma quantidade de produto maior do que a disponível em estoque". A regra foi submetida deliberadamente a um cenário de concorrência — duas vendas do mesmo produto ocorrendo em um único instante, disputando a última unidade disponível —, o que possibilitou investigar, de forma concreta, os principais recursos oferecidos pelo PostgreSQL para a garantia de regras de negócio, entre eles constraints, triggers, stored procedures e transações ACID, contrapondo-os às validações tipicamente realizadas na camada de aplicação.
+
+A posição defendida pelo grupo, fundamentada ao longo de todo o desenvolvimento deste trabalho, é a de que a relação entre banco de dados e aplicação não comporta uma resposta absoluta ou universalmente aplicável: a escolha adequada depende da natureza da regra, do risco associado à sua eventual violação e do contexto de uso do sistema. Não obstante, o estudo de caso conduzido demonstra que, em cenários marcados por concorrência e por exigências críticas de integridade — como o controle de estoque analisado —, apenas o banco de dados é capaz de oferecer uma garantia absoluta, permanecendo a aplicação indispensável como primeira camada de comunicação e validação junto ao usuário, ainda que insuficiente, por si só, para assegurar a consistência dos dados.
 
 ## 1. Desenvolvimento Teórico
 
 ### 1.1 O que é regra de negócio?
+Uma regra de negócio é uma condição, orientação ou restrição que representa uma necessidade, política ou critério próprio de uma organização e que deve ser respeitado pelo sistema para que suas operações ocorram de acordo com o funcionamento esperado do negócio. Em termos práticos, as regras de negócio transformam decisões e exigências do contexto real em comportamentos que podem ser incorporados a um sistema computacional.
 
+Sua função não se limita a determinar o que o sistema pode ou não pode fazer. Uma regra de negócio também estabelece em quais condições uma operação é válida, quais situações devem ser impedidas, quais informações precisam ser preservadas e quais comportamentos devem ocorrer diante de determinadas circunstâncias. Dessa forma, ela funciona como uma ponte entre a lógica do negócio e a implementação tecnológica responsável por garantir que essa lógica seja respeitada.
+
+Por exemplo, em um sistema de vendas, uma regra pode determinar que um produto não pode ser vendido em quantidade superior à disponível em estoque. Essa determinação não surgiu da tecnologia: ela representa uma necessidade do próprio negócio. O sistema apenas precisa encontrar uma forma confiável de transformá-la em uma restrição efetivamente respeitada.
+
+Essa distinção é fundamental porque uma regra de negócio não deve ser confundida com uma simples validação de entrada. Verificar se um campo foi preenchido, por exemplo, pode ser uma validação técnica da aplicação. Já impedir que uma venda seja concluída quando ela compromete uma condição essencial do estoque representa uma regra diretamente relacionada ao funcionamento do negócio.
+
+1.1 Definição e características
+
+As regras de negócio podem ser entendidas como mecanismos que delimitam os estados e comportamentos aceitáveis de um sistema. Elas determinam o que é permitido, o que é proibido ou o que deve acontecer quando determinadas condições são satisfeitas.
+
+Uma regra bem definida deve ser:
+
+Clara: sua interpretação não deve depender de ambiguidades;
+Consistente: não deve entrar em conflito com outras regras do sistema;
+Verificável: deve ser possível determinar se ela está sendo respeitada;
+Relevante para o negócio: deve representar uma necessidade real da organização;
+Aplicável ao contexto: sua implementação deve considerar onde e como as operações acontecem;
+Resistente a situações de concorrência, quando a regra envolve recursos compartilhados ou operações simultâneas.
+
+A última característica ganha especial importância em sistemas que possuem múltiplos usuários ou processos realizando operações ao mesmo tempo. Uma regra aparentemente simples pode deixar de ser efetivamente garantida quando duas operações concorrentes consultam e modificam o mesmo dado. Por isso, a análise de uma regra de negócio deve considerar não apenas a sua formulação, mas também as condições nas quais ela será executada.
+
+1.2 Tipos de regras de negócio
+
+As regras de negócio podem assumir diferentes formas, dependendo do tipo de decisão ou restrição que representam.
+
+Regras de restrição determinam aquilo que não pode ocorrer ou estabelecem limites que devem ser respeitados. São particularmente importantes para preservar a integridade das informações. No contexto de um sistema de vendas, por exemplo, a regra que impede a venda de uma quantidade superior ao estoque disponível constitui uma regra de restrição.
+
+Regras de validação verificam se determinadas condições foram atendidas antes que uma operação seja aceita. Podem envolver valores obrigatórios, formatos, limites, combinações de informações ou condições específicas para a realização de uma operação.
+
+Regras de derivação ou cálculo determinam como uma informação deve ser obtida a partir de outras informações. O cálculo do valor total de uma venda, por exemplo, pode depender da quantidade de produtos, dos respectivos preços e de eventuais descontos aplicáveis.
+
+Regras de autorização estabelecem quem pode executar determinadas operações ou acessar determinados recursos. Um sistema pode, por exemplo, permitir que apenas usuários com determinada função realizem o cancelamento de uma venda ou alterem informações de estoque.
+
+Regras de fluxo ou processo determinam a sequência ou as condições para que uma atividade avance de uma etapa para outra. Um pedido pode precisar ser aprovado antes de ser enviado, ou uma venda pode precisar estar em determinado estado antes de permitir seu cancelamento.
+
+Embora essas categorias ajudem a organizar o entendimento das regras, uma mesma regra pode apresentar características de mais de um tipo. Por isso, sua classificação deve considerar principalmente a finalidade que desempenha dentro do negócio.
+
+1.3 A importância da implementação correta
+
+Definir uma regra de negócio é apenas o primeiro passo. O desafio está em garantir que ela seja efetivamente respeitada durante a execução do sistema. Uma regra pode estar corretamente descrita na documentação e ainda assim ser vulnerável caso sua implementação não considere todas as formas pelas quais os dados podem ser alterados.
+
+Esse problema se torna mais evidente quando diferentes usuários ou processos acessam simultaneamente os mesmos recursos. Considere, novamente, o estoque de uma loja: se existe apenas uma unidade de determinado produto e dois clientes tentam comprá-la praticamente no mesmo instante, não basta que cada operação verifique individualmente se existe estoque. É necessário garantir que as duas operações não consigam utilizar a mesma unidade como se ela estivesse disponível para ambas.
+
+Nesse contexto, surge uma questão arquitetural central: onde a regra deve ser garantida? A aplicação pode realizar validações e orientar o fluxo da operação, enquanto o banco de dados dispõe de mecanismos próprios para preservar a integridade dos dados e controlar operações concorrentes.
+
+Portanto, a escolha entre implementar uma regra na aplicação, no banco de dados ou de forma combinada não deve ser baseada apenas em preferência tecnológica. Deve considerar a natureza da regra, sua criticidade, o risco de inconsistências, a possibilidade de acesso concorrente e a necessidade de garantir que a restrição seja respeitada independentemente da origem da operação.
+
+Essa perspectiva conduz ao principal ponto de análise deste trabalho: determinadas regras podem ser adequadamente tratadas pela aplicação, enquanto outras exigem mecanismos de proteção mais próximos dos próprios dados. No caso de regras que representam invariantes fundamentais do negócio, especialmente aquelas cuja violação pode produzir informações incorretas ou inconsistentes, a capacidade do banco de dados de atuar como uma camada adicional de garantia torna-se um elemento relevante na arquitetura do sistema.
 ### 1.2 Regras no banco de dados
 
 Uma loja de acessórios de tecnologia (teclado, fone sem fio, microfone de lapela), onde a regra que mais nos interessa é "não pode vender mais do que tem em estoque, mesmo se dois vendedores tentarem vender o mesmo item ao mesmo tempo".
@@ -252,6 +306,14 @@ Diferente de um exemplo básico que só usa CHECK (estoque >= 0), este caso demo
 
 ## 3. Referências
 
+BUSINESS RULES GROUP. Defining Business Rules — What Are They Really? 3. ed. Disponível em: https://www.businessrulesgroup.org/first_paper/BRG-whatisBR_3ed.pdf. Acesso em: 19 ago. 2026.
+
+BUSINESS RULES GROUP. The Business Rules Approach & Mantra. Disponível em: https://www.businessrulesgroup.org/brapproach_mantra.php. Acesso em: 19 ago. 2026.
+
+OBJECT MANAGEMENT GROUP (OMG). Semantics of Business Vocabulary and Business Rules (SBVR). Disponível em: https://www.omg.org/bpm/. Acesso em: 19 ago. 2026.
+
+POSTGRESQL GLOBAL DEVELOPMENT GROUP. PostgreSQL 18 Documentation — Constraints. Disponível em: https://www.postgresql.org/docs/current/ddl-constraints.html. Acesso em: 19 ago. 2026
+
 ALURA. O que são regras de negócio? Autora: Juliana Amoasei. 13 mar. 2023. Disponível em: https://www.alura.com.br/artigos/o-que-sao-regras-de-negocio. Acesso em: 19 ago. 2026.
 
 STACK OVERFLOW EM PORTUGUÊS. Regras de Negócio no Banco de Dados - quais as vantagens e desvantagens? Stack Overflow em Português, 13 maio 2014. Disponível em: https://pt.stackoverflow.com/questions/15739/regras-de-neg%C3%B3cio-no-banco-de-dados-quais-as-vantagens-e-desvantagens. Acesso em: 19 ago. 2026.
@@ -267,6 +329,19 @@ POSTGRESQL GLOBAL DEVELOPMENT GROUP. *PostgreSQL 18 Documentation — CREATE PRO
 POSTGRESQL GLOBAL DEVELOPMENT GROUP. **PostgreSQL 18 Documentation — Chapter 67. Transaction Processing**. Disponível em: https://www.postgresql.org/docs/current/transactions.html. Acesso em: 19 ago. 2026.
 
 ## 4. Conclusões
+A análise desenvolvida ao longo deste trabalho demonstra que a definição do local adequado para uma regra de negócio não pode ser tratada como uma escolha puramente técnica ou como uma preferência entre banco de dados e aplicação. A questão central está em compreender o que precisa ser garantido, em quais condições essa garantia deve permanecer válida e qual camada possui os mecanismos necessários para assegurá-la.
+
+O estudo de caso do sistema de vendas tornou essa questão concreta. A regra de que não se pode vender uma quantidade superior à disponível em estoque parece simples quando observada em uma operação isolada. Entretanto, quando duas vendas disputam simultaneamente a última unidade de um produto, o problema deixa de ser apenas uma validação de quantidade e passa a envolver concorrência, atomicidade e consistência dos dados. Nesse cenário, a análise demonstrou que uma verificação realizada exclusivamente pela aplicação possui uma limitação estrutural: entre a leitura do estoque e sua atualização existe uma janela na qual outra operação pode modificar o mesmo dado.
+
+Os testes e exemplos apresentados evidenciam, portanto, que a aplicação e o banco de dados possuem responsabilidades diferentes e complementares. A aplicação é essencial para conduzir o fluxo da operação, realizar validações preliminares, comunicar as condições ao usuário e tratar adequadamente uma operação recusada. Entretanto, quando a regra representa uma condição que não pode ser violada independentemente de quantas aplicações ou usuários estejam acessando os mesmos dados, a garantia precisa estar apoiada nos mecanismos de controle do próprio banco de dados.
+
+No caso analisado, o uso de uma operação atômica com condição de estoque suficiente permite que a verificação e o decremento sejam tratados como uma única operação, impedindo que duas vendas concorrentes consumam a mesma unidade. O CHECK contribui para impedir estados inválidos, enquanto o controle transacional e a operação condicional atuam diretamente sobre o problema de concorrência. Dessa forma, a solução não apenas verifica se a regra foi obedecida, mas cria mecanismos para impedir que uma violação seja efetivamente persistida.
+
+A partir disso, a posição adotada pelo grupo não é a de que todas as regras devam ser transferidas para o banco de dados. Essa seria uma conclusão igualmente limitada. Regras relacionadas à interação, ao fluxo da aplicação, à apresentação de mensagens e a decisões que dependem do contexto da interface continuam pertencendo naturalmente à camada de aplicação. O que o estudo demonstra é que a criticidade da regra deve determinar onde sua garantia precisa estar: quanto mais fundamental for a integridade que aquela regra protege, maior é a necessidade de que sua violação seja impedida na camada que controla diretamente os dados.
+
+Assim, a principal aprendizagem obtida pelo grupo é que validar não é necessariamente garantir. Uma aplicação pode verificar uma condição e, ainda assim, não conseguir assegurar que ela permanecerá verdadeira quando outras operações ocorrerem simultaneamente. A diferença entre essas duas ideias foi evidenciada pelo cenário da última unidade em estoque e constitui o principal resultado da análise realizada.
+
+Conclui-se, portanto, que banco de dados e aplicação não devem ser vistos como alternativas excludentes, mas como camadas com responsabilidades distintas dentro de uma mesma arquitetura. Para regras críticas de integridade e consistência, especialmente sob concorrência, o banco de dados deve assumir a responsabilidade pela garantia da regra, enquanto a aplicação deve atuar como camada de validação, comunicação e tratamento dos resultados. A melhor arquitetura não é aquela que simplesmente escolhe entre banco ou aplicação, mas aquela que coloca cada responsabilidade no lugar em que ela pode ser efetivamente garantida.
 
 ## Link do Repositório Git
 
