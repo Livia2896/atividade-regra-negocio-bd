@@ -256,6 +256,16 @@ ALURA. O que são regras de negócio? Autora: Juliana Amoasei. 13 mar. 2023. Dis
 
 STACK OVERFLOW EM PORTUGUÊS. Regras de Negócio no Banco de Dados - quais as vantagens e desvantagens? Stack Overflow em Português, 13 maio 2014. Disponível em: https://pt.stackoverflow.com/questions/15739/regras-de-neg%C3%B3cio-no-banco-de-dados-quais-as-vantagens-e-desvantagens. Acesso em: 19 ago. 2026.
 
+UNIVERSIDADE FEDERAL DE SANTA CATARINA. Departamento de Informática e Estatística. Banco de Dados I. Florianópolis: UFSC, 2021. Disponível em: https://planos.inf.ufsc.br/modulos/planos/visualizar.php?id=3728. Acesso em: 19 ago. 2026.
+
+ALEXANDRUK, Marcos. Modelagem de Banco de Dados. Instituto Federal da Bahia. Disponível em: https://www.ads.ifba.edu.br/dl456. Acesso em: 19 ago. 2026.
+
+POSTGRESQL GLOBAL DEVELOPMENT GROUP. **PostgreSQL 18 Documentation — Chapter 5.5. Constraints**. Disponível em: https://www.postgresql.org/docs/current/ddl-constraints.html. Acesso em: 19 ago. 2026.
+
+POSTGRESQL GLOBAL DEVELOPMENT GROUP. *PostgreSQL 18 Documentation — CREATE PROCEDURE*. Disponível em: https://www.postgresql.org/docs/current/sql-createprocedure.html. Acesso em: 19 ago. 2026.
+
+POSTGRESQL GLOBAL DEVELOPMENT GROUP. **PostgreSQL 18 Documentation — Chapter 67. Transaction Processing**. Disponível em: https://www.postgresql.org/docs/current/transactions.html. Acesso em: 19 ago. 2026.
+
 ## 4. Conclusões
 
 ## Link do Repositório Git
