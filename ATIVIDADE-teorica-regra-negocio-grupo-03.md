@@ -1,6 +1,6 @@
 # Atividade Teórica: Regra de Negócio no BD versus na Aplicação
 
-**Aluno(s):** Andreia Letícia Lemos, Layla Tais Sousa, Lívia Moreira, Maiany Melo, Sarha Sthefanny, Yasmin de Lima
+**Aluno(s):** Andreia Letícia Lemos, Layla Tais Sousa, Lívia Moreira, Maiany Melo, Sarha Sthefanny Araripe Silva, Yasmin de Lima
 **Turma:** Banco de Dados 2026
 **Data:** 19/08/2026
 **Repositório Git:** https://github.com/Livia2896/atividade-regra-negocio-bd
@@ -12,6 +12,79 @@
 ### 1.1 O que é regra de negócio?
 
 ### 1.2 Regras no banco de dados
+
+Pra manter a coerência com o resto do trabalho, vamos usar o mesmo exemplo: uma loja de acessórios de tecnologia (teclado, fone sem fio, microfone de lapela), onde a regra que mais nos interessa é "não pode vender mais do que tem em estoque, mesmo se dois vendedores tentarem vender o mesmo item ao mesmo tempo".
+
+**Constraints**
+**CHECK**
+
+Dá pra usar um *CHECK* simples pra garantir que o estoque nunca fique negativo, tipo *estoque >= 0* lá na tabela de produtos. Assim, mesmo que alguma venda seja processada errado, o banco não deixa o teclado ficar com "-2" no estoque.
+
+**Vantagens:**
+    1. Essa regra vale pra qualquer sistema que mexer no banco (site, app do vendedor, PDV da loja), não importa quem escreveu o código, ninguém consegue "burlar" a regra esquecendo de validar na aplicação.
+    2. É simples de declarar e não exige escrever nenhuma lógica extra, só a condição direto na definição da coluna.
+**Limitações:**
+    1. Sozinha, ela não resolve o problema dos dois vendedores vendendo o último fone ao mesmo tempo, só barra o resultado final negativo, não coordena o que acontece durante a venda (isso só a gente resolve com transação, mais pra frente).
+    2. Só valida regras simples sobre a própria linha/coluna, não dá pra usar CHECK, por exemplo, pra impedir que um cliente tenha dois pedidos em aberto ao mesmo tempo, porque isso depende de olhar outras linhas da tabela.
+    
+**FOREIGN KEY**
+
+Aqui é o clássico: garantir que todo item de um pedido aponte pra um produto que realmente existe na tabela de produtos. Evita, por exemplo, um pedido "referenciando" um microfone de lapela que já foi removido do catálogo.
+
+**Vantagens:**
+    1. Evita esses pedidos "órfãos", que apontariam pra produtos inexistentes e quebrariam relatórios de venda.
+    2. Pode propagar ações automáticas, tipo *ON DELETE CASCADE*, se um produto for descontinuado, sem precisar de código extra na aplicação pra isso.
+**Limitações:**
+    1. Se usarmos *CASCADE* sem pensar direito, dá pra acabar apagando o histórico de vendas inteiro só porque alguém excluiu um produto do catálogo.
+    2. Toda *FK* impõe uma checagem extra em cada *INSERT/UPDATE/DELETE*, o que pode pesar um pouco a performance se a loja tiver um volume grande de vendas.
+    
+**UNIQUE**
+
+Serve pra garantir, por exemplo, que o *SKU* (código) de cada produto seja único, não pode ter dois cadastros diferentes pro mesmo teclado.
+
+**Vantagens:**
+    1. Evita duplicidade sem precisar validar isso na aplicação, o banco recusa o cadastro duplicado automaticamente.
+    2. De brinde, geralmente cria um índice, o que ajuda a busca por produto a ser mais rápida.
+**Limitações:**
+    1. Não pega duplicidade "disfarçada", tipo dois cadastros diferentes com nomes escritos de forma diferente pro mesmo produto (ex.: "Fone BT-100" e "fone bt 100").
+    2. O comportamento com valores *NULL* varia de SGBD pra SGBD, alguns permitem vários *NULLs* numa coluna *UNIQUE*, o que pode gerar confusão se a equipe não souber disso.
+    
+**Triggers**
+
+Dá pra criar uma trigger que, toda vez que o estoque de um produto mudar, registre automaticamente um log (quem vendeu, quando, quanto). Ou até uma trigger que atualiza o estoque assim que a venda é confirmada.
+
+**Vantagens:**
+    1. Funciona pra loja inteira, seja venda pelo site ou pelo PDV da loja física, sem depender de cada sistema lembrar de atualizar o estoque manualmente.
+    2. É muito útil pra auditoria, dá pra manter um histórico de quem alterou o quê e quando, sem precisar que a aplicação implemente esse log.
+**Limitações:**
+    1. Fica meio "escondido", se um colega for ler só o código da aplicação, não vai entender de onde vem a atualização do estoque, o que dificulta a manutenção.
+    2. Pode complicar de debugar se uma trigger disparar outra (efeito cascata), e cada banco tem sua própria sintaxe, então não dá pra simplesmente copiar de um SGBD pro outro.
+    
+**Stored Procedures**
+
+Dava pra criar uma procedure tipo realizar_venda(produto_id, quantidade) que já faz tudo: confere se tem estoque, desconta a quantidade vendida e registra o pedido, tudo numa chamada só.
+
+**Vantagens:**
+    1. Reduz a ida e volta entre aplicação e banco (várias operações numa chamada só), o que ajuda na performance.
+    2. A mesma lógica de venda pode ser reaproveitada tanto pelo site quanto pelo app do vendedor e pelo PDV, não precisa reescrever a regra em cada lugar.
+**Limitações:**
+    1. Prende a lógica de negócio no banco, o que complica testar isso separado da aplicação (é mais difícil simular cenários de teste automatizado).
+    2. Esbarra na portabilidade: se um dia a loja resolver trocar de banco de dados, essa procedure toda ia ter que ser reescrita na sintaxe do novo SGBD.
+    
+**Transações ACID**
+
+Esse é o ponto que realmente resolve o problema dos dois vendedores vendendo o mesmo produto ao mesmo tempo. Se a verificação do estoque e o desconto da quantidade vendida acontecerem dentro da mesma transação (com um nível de isolamento adequado, tipo usando *SELECT ... FOR UPDATE*), o banco garante que a segunda venda só é processada depois que a primeira transação terminar. Assim evita que as duas vendas leiam "1 unidade disponível" ao mesmo tempo e as duas confirmem, deixando o estoque em -1.
+    • **Atomicidade:** descontar o estoque e registrar o pedido acontecem juntos, ou nenhum dos dois acontece.
+    • **Consistência:** a venda só é confirmada se o estoque continuar válido.
+    • **Isolamento:** a venda de um vendedor não vê o estado "no meio do caminho" da venda do outro.
+    • **Durabilidade:** depois que a venda é confirmada, ela fica salva mesmo que o servidor caia logo depois.
+    
+**Vantagens:**
+    1. Resolve justamente o nosso problema de concorrência, sem a gente precisar programar manualmente um "lock" de estoque na aplicação.
+    2. Simplifica o raciocínio do desenvolvedor sobre falhas, se algo der errado no meio da venda, o banco desfaz tudo sozinho (rollback), sem deixar dado inconsistente pra trás.
+**Limitações:**
+    1. Um isolamento muito rígido (tipo *SERIALIZABLE*) deixa o sistema mais lento em dias de muita venda, porque os vendedores acabam esperando uma transação terminar pra outra começar.
+    2. Se a loja crescer e tiver várias filiais com bancos separados, manter ACID completo entre todos eles fica bem mais difícil (ou caro), é aí que entra a discussão sobre CAP e modelos BASE em bancos NoSQL.
 
 ### 1.3 Regras na aplicação
 
