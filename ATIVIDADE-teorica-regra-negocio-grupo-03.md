@@ -252,6 +252,10 @@ Diferente de um exemplo básico que só usa CHECK (estoque >= 0), este caso demo
 
 ## 3. Referências
 
+ALURA. O que são regras de negócio? Autora: Juliana Amoasei. 13 mar. 2023. Disponível em: https://www.alura.com.br/artigos/o-que-sao-regras-de-negocio. Acesso em: 19 ago. 2026.
+
+STACK OVERFLOW EM PORTUGUÊS. Regras de Negócio no Banco de Dados - quais as vantagens e desvantagens? Stack Overflow em Português, 13 maio 2014. Disponível em: https://pt.stackoverflow.com/questions/15739/regras-de-neg%C3%B3cio-no-banco-de-dados-quais-as-vantagens-e-desvantagens. Acesso em: 19 ago. 2026.
+
 ## 4. Conclusões
 
 ## Link do Repositório Git
