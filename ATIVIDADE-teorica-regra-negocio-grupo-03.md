@@ -13,7 +13,7 @@
 
 ### 1.2 Regras no banco de dados
 
-Pra manter a coerência com o resto do trabalho, vamos usar o mesmo exemplo: uma loja de acessórios de tecnologia (teclado, fone sem fio, microfone de lapela), onde a regra que mais nos interessa é "não pode vender mais do que tem em estoque, mesmo se dois vendedores tentarem vender o mesmo item ao mesmo tempo".
+Uma loja de acessórios de tecnologia (teclado, fone sem fio, microfone de lapela), onde a regra que mais nos interessa é "não pode vender mais do que tem em estoque, mesmo se dois vendedores tentarem vender o mesmo item ao mesmo tempo".
 
 **Constraints**
 **CHECK**
